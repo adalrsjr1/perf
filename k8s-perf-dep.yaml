@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: perf-cpu-cm
+data:
+  LOAD: "0.5"
+  DURATION: "8640000"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: perf-mem-cm
+data:
+  # https://golang.org/pkg/runtime/
+  GOCG: "off"
+  LOAD: "4096"
+  DURATION: "8640000"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: perf
+  annotations:
+    reloader.stakater.com/auto: "true"
+  labels:
+    app: perf
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: perf
+      labels:
+        app: perf
+    spec:
+      containers:
+        - name: perf-cpu
+          image: adalrsjr1/perf
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: perf-cpu-cm
+          command: ["/bin/sh", "-c", "main cpu --load=$(LOAD) --duration=$(DURATION)"]
+          resources:
+            limits:
+              cpu: "1"
+        - name: perf-mem
+          image: adalrsjr1/perf
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: perf-mem-cm
+          command: ["/bin/sh", "-c", "main mem --load=$(LOAD) --duration=$(DURATION)"]
+          resources:
+            limits:
+              memory: "2048Mi"
+      restartPolicy: Always
+  selector:
+    matchLabels:
+      app: perf
