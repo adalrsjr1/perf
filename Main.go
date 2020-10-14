@@ -17,8 +17,14 @@ func main() {
 	memLoadArg := memCmd.Uint64("load", 256, "memory load in megabytes")
 	memDurationArg := memCmd.Uint("duration", 1000, "duration in milliseconds")
 
+	rqpsCmd := flag.NewFlagSet("rqps", flag.ExitOnError)
+	rqpsLoadArg := rqpsCmd.Int("load", 100, "max number of requests per second")
+	rqpsBurstArg := rqpsCmd.Int("burst", 1, "extra requests in addition to the load")
+	rqpsWaitArg := rqpsCmd.Int("wait", 1, "waiting time  in millisecond before cancelling a request")
+	serverPort := rqpsCmd.Uint("port", 8888, "server port")
+
 	if len(os.Args) < 2 {
-		fmt.Println("expected 'cpu' or 'mem' subcommands")
+		fmt.Println("expected either 'cpu', 'mem', 'rqps' subcommands")
 		os.Exit(1)
 	}
 
@@ -31,8 +37,12 @@ func main() {
 		memCmd.Parse(os.Args[2:])
 		fmt.Println("calling 'mem'")
 		mock.SetMemUsage(*memLoadArg, *memDurationArg)
+	case "rqps":
+		rqpsCmd.Parse(os.Args[2:])
+		fmt.Println("calling 'rqps")
+		mock.SetRqpsLoad(*serverPort, *rqpsLoadArg, *rqpsBurstArg, *rqpsWaitArg)
 	default:
-		fmt.Println("expected 'cpu' or 'mem' subcommands")
+		fmt.Println("expected 'cpu', 'mem', or 'rqps' subcommands")
 		os.Exit(1)
 	}
 

@@ -16,6 +16,16 @@ data:
   LOAD: "4096"
   DURATION: "8640000"
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: perf-rpqs-cm
+data:
+  LOAD: "100"
+  BURST: "1"
+  WAIT: "100"
+  PORT: "8080"
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -53,7 +63,31 @@ spec:
           resources:
             limits:
               memory: "2048Mi"
+        - name: perf-rqps
+          image: adalrsjr1/perf
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: perf-rqps-cm
+          command: [ "/bin/sh", "-c", "main rqps --load=$(LOAD) --burst=$(BURST) --wait=$(WAIT) --port$(PORT)" ]
+          resources:
+            limits:
+              cpu: "1"
       restartPolicy: Always
   selector:
     matchLabels:
       app: perf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: perf-svc
+spec:
+  selector:
+    app: perf
+  ports:
+    - port: 8080
+      nodePort: 30080
+  type: NodePort
