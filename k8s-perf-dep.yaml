@@ -12,7 +12,7 @@ metadata:
   name: perf-mem-cm
 data:
   # https://golang.org/pkg/runtime/
-  GOCG: "off"
+  GOCG: "off" # turn on/off GC
   LOAD: "4096"
   DURATION: "8640000"
 ---
@@ -25,6 +25,10 @@ data:
   BURST: "1"
   WAIT: "100"
   PORT: "8080"
+  REQUEST_SIZE : "1024"  # 1024 * 4 == 4096B
+  RESPONSE_SIZE : "1024" # 1024 * 4 == 4096B
+  RESPONSE_TIME : "1000" # milliseconds
+  TARGETS: "" # list os targets separed with semicolon ; e.g., {app1.default.svc.local.cluster;app2.default.svc.local.cluster}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -71,7 +75,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: perf-rqps-cm
-          command: [ "/bin/sh", "-c", "main rqps --load=$(LOAD) --burst=$(BURST) --wait=$(WAIT) --port$(PORT)" ]
+          command: [ "/bin/sh", "-c", "main rqps --load=$(LOAD) --burst=$(BURST) --wait=$(WAIT) --port=$(PORT)  --targets=$(TARGETS)
+          --request-size=$(REQUEST_SIZE) --response-size=$(RESPONSE_SIZE) --response-time=$(RESPONSE_TIME)"]
           resources:
             limits:
               cpu: "1"

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"perf/mock"
+	"time"
 )
 
 func main() {
@@ -23,6 +24,9 @@ func main() {
 	rqpsWaitArg := rqpsCmd.Int("wait", 1, "waiting time  in millisecond before cancelling a request")
 	serverPort := rqpsCmd.Uint("port", 8888, "server port")
 	rqpsTargets := rqpsCmd.String("targets", "", "list of targets separated with ;")
+	reqSize := rqpsCmd.Int("request-size", 1024, "request size in bytes, the real value is request size * 4")
+	resSize := rqpsCmd.Int("response-size", 1024, "response size in bytes, the real value is request size * 4")
+	respTime := rqpsCmd.Uint("response-time", 0, "response time in milliseconds")
 
 	if len(os.Args) < 2 {
 		fmt.Println("expected either 'cpu', 'mem', 'rqps' subcommands")
@@ -41,7 +45,10 @@ func main() {
 	case "rqps":
 		rqpsCmd.Parse(os.Args[2:])
 		fmt.Println("calling 'rqps")
-		mock.SetRqpsLoad(*serverPort, *rqpsLoadArg, *rqpsBurstArg, *rqpsWaitArg, *rqpsTargets)
+
+		action := mock.NewAction(*rqpsTargets, *reqSize, *resSize, time.Duration(*respTime) * time.Millisecond)
+
+		mock.SetRqpsLoad(*serverPort, *rqpsLoadArg, *rqpsBurstArg, *rqpsWaitArg, &action)
 	default:
 		fmt.Println("expected 'cpu', 'mem', or 'rqps' subcommands")
 		os.Exit(1)
