@@ -22,6 +22,7 @@ func main() {
 	rqpsBurstArg := rqpsCmd.Int("burst", 1, "extra requests in addition to the load")
 	rqpsWaitArg := rqpsCmd.Int("wait", 1, "waiting time  in millisecond before cancelling a request")
 	serverPort := rqpsCmd.Uint("port", 8888, "server port")
+	rqpsTargets := rqpsCmd.String("targets", "", "list of targets separated with ;")
 
 	if len(os.Args) < 2 {
 		fmt.Println("expected either 'cpu', 'mem', 'rqps' subcommands")
@@ -40,7 +41,7 @@ func main() {
 	case "rqps":
 		rqpsCmd.Parse(os.Args[2:])
 		fmt.Println("calling 'rqps")
-		mock.SetRqpsLoad(*serverPort, *rqpsLoadArg, *rqpsBurstArg, *rqpsWaitArg)
+		mock.SetRqpsLoad(*serverPort, *rqpsLoadArg, *rqpsBurstArg, *rqpsWaitArg, *rqpsTargets)
 	default:
 		fmt.Println("expected 'cpu', 'mem', or 'rqps' subcommands")
 		os.Exit(1)
