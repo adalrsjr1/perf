@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"perf/util"
+	"strings"
 	"time"
 )
 
@@ -31,9 +32,20 @@ func run(port uint, rpq, burst, wait int, action* Action) {
 
 type Action struct {
 	listOfTargets []string
-	currTarget int
-	reqSize int
-	respSize int
+	currTarget    int
+	reqSize       int
+	respSize      int
+	respTime      time.Duration
+}
+
+func NewAction(listOfTargets string, reqSize int, respSize int, latency time.Duration) Action {
+	return Action{
+		listOfTargets: strings.Split(listOfTargets, ";"),
+		currTarget:    0,
+		reqSize:       reqSize,
+		respSize:      respSize,
+		respTime:      latency,
+	}
 }
 
 func (a* Action) nextAddr() string {
@@ -57,6 +69,7 @@ func (a* Action) Execute(w http.ResponseWriter, req *http.Request) {
 	var body []byte
 	var err error
 	status := http.StatusOK
+
 	if addr != "" {
 		hostname, err := os.Hostname()
 		if err != nil {
@@ -82,6 +95,9 @@ func (a* Action) Execute(w http.ResponseWriter, req *http.Request) {
 
 	newBody := []byte(util.String(a.respSize))
 	body = append(body, newBody...)
+
+	// add respTime
+	time.Sleep(a.respTime)
 
 	w.WriteHeader(status)
 	w.Header().Set("Content-Type", "application/json")
