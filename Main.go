@@ -1,5 +1,5 @@
 package main
-
+# to refer: https://hub.docker.com/r/polinux/stress
 import (
 	"flag"
 	"fmt"
